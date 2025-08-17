@@ -11,7 +11,6 @@ import (
 type Window struct {
 	Handle uintptr
 	title  string
-	dim    windows.Rect
 }
 
 var (
@@ -25,9 +24,7 @@ var (
 )
 
 const (
-	GA_ROOT          = 2
-	GWL_EXSTYLE      = -20
-	WS_EX_TOOLWINDOW = 0x00000080
+	GA_ROOT = 2
 )
 
 func main() {
@@ -42,14 +39,8 @@ func main() {
 		if root != uintptr(hwnd) {
 			return 1
 		}
-		idx := int32(GWL_EXSTYLE)
-		exStyle, _, _ := getWindowLong.Call(uintptr(hwnd), uintptr(idx))
-		if exStyle&WS_EX_TOOLWINDOW != 0 {
-			return 1
-		}
-		// fmt.Println("Window Rect:", rect)
 		if title != "" && windows.IsWindowVisible(hwnd) && rect.Right-rect.Left > 0 && rect.Bottom-rect.Top > 0 {
-			openWindows = append(openWindows, Window{Handle: uintptr(hwnd), title: title, dim: rect})
+			openWindows = append(openWindows, Window{Handle: uintptr(hwnd), title: title})
 		}
 		return 1
 	})
@@ -60,7 +51,7 @@ func main() {
 	}
 	if openWindows != nil {
 		for _, window := range openWindows {
-			fmt.Println("HWND: ", window.Handle, "Title: ", window.title, "Dim: ", window.dim)
+			fmt.Println("HWND: ", window.Handle, "Title: ", window.title)
 		}
 	}
 	// fmt.Println("Enter the window to focus: ")

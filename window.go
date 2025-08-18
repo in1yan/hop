@@ -10,7 +10,7 @@ import (
 
 type Window struct {
 	Handle uintptr
-	title  string
+	Title  string
 }
 
 var (
@@ -19,16 +19,14 @@ var (
 	setWindow     = user32.NewProc("SetForegroundWindow")
 	getWindowRect = user32.NewProc("GetWindowRect")
 	getAncestor   = user32.NewProc("GetAncestor")
-	getWindowLong = user32.NewProc("GetWindowLongW")
-	openWindows   []Window
 )
 
 const (
 	GA_ROOT = 2
 )
 
-func main() {
-
+func GetOpenWindows() []Window {
+	var openWindows []Window
 	cb := syscall.NewCallback(func(hwnd windows.HWND, lparam uintptr) uintptr {
 		buf := make([]uint16, 255)
 		getWindowText.Call(uintptr(hwnd), uintptr(unsafe.Pointer(&buf[0])), uintptr(len(buf)))
@@ -40,7 +38,7 @@ func main() {
 			return 1
 		}
 		if title != "" && windows.IsWindowVisible(hwnd) && rect.Right-rect.Left > 0 && rect.Bottom-rect.Top > 0 {
-			openWindows = append(openWindows, Window{Handle: uintptr(hwnd), title: title})
+			openWindows = append(openWindows, Window{Handle: uintptr(hwnd), Title: title})
 		}
 		return 1
 	})
@@ -49,13 +47,13 @@ func main() {
 	if err != nil {
 		fmt.Println("Error:", err)
 	}
-	if openWindows != nil {
-		for _, window := range openWindows {
-			fmt.Println("HWND: ", window.Handle, "Title: ", window.title)
-		}
+	return openWindows
+}
+
+func SetForegroundWindow(hwnd uintptr) error {
+	ret, _, err := setWindow.Call(hwnd)
+	if ret == 0 {
+		return fmt.Errorf("SetForegroundWindow failed: %v", err)
 	}
-	// fmt.Println("Enter the window to focus: ")
-	// var hwnd uintptr
-	// fmt.Scanf("%d", &hwnd)
-	// setWindow.Call(hwnd)
+	return nil
 }

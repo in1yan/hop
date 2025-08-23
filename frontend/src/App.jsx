@@ -1,6 +1,7 @@
 import {useState} from 'react';
 import './App.css';
 import {GetWindows, SetFocus} from "../wailsjs/go/main/App";
+import {Hide} from "../wailsjs/runtime/runtime";
 function App() {
     const [resultText, setResultText] = useState([]);
     const updateResultText = (result) => setResultText(result);
@@ -24,6 +25,9 @@ function App() {
                 </ul>
                 <button className="btn" onClick={getWin}>
                     Get Windows
+                </button>
+                <button className="btn" onClick={Hide}>
+                Hide
                 </button>
             </div>
         </div>

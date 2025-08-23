@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"fmt"
+
+	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 // App struct
@@ -19,6 +21,7 @@ func NewApp() *App {
 // so we can call the runtime methods
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
+
 }
 
 // Greet returns a greeting for the given name
@@ -31,5 +34,6 @@ func (a *App) GetWindows() []Window {
 }
 
 func (a *App) SetFocus(hwnd uintptr) error {
+	runtime.Hide((a.ctx))
 	return SetForegroundWindow(hwnd)
 }

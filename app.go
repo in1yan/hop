@@ -37,3 +37,7 @@ func (a *App) SetFocus(hwnd uintptr) error {
 	runtime.Hide((a.ctx))
 	return SetForegroundWindow(hwnd)
 }
+
+func (a *App) FocusHiddenInput() {
+	runtime.EventsEmit(a.ctx, "focus:input")
+}

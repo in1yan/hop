@@ -7,6 +7,7 @@ import (
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
+	"github.com/wailsapp/wails/v2/pkg/options/windows"
 )
 
 //go:embed all:frontend/dist
@@ -19,21 +20,22 @@ func main() {
 	// defer cancel()
 	// Create application with options
 	err := wails.Run(&options.App{
-		Title:     "hop",
-		Width:     500,
-		Height:    200,
-		Frameless: true,
+		Title:       "hop",
+		Width:       500,
+		Height:      200,
+		Frameless:   true,
+		StartHidden: true,
 		AssetServer: &assetserver.Options{
 			Assets: assets,
 		},
-		BackgroundColour: &options.RGBA{R: 27, G: 38, B: 54, A: 1},
+		BackgroundColour: &options.RGBA{R: 0, G: 0, B: 0, A: 0},
 		OnStartup: func(ctx context.Context) {
 			app.startup(ctx)
 			go InstallHook(ctx)
 		},
-		// OnShutdown: func(ctx context.Context) {
-		// 	cancel()
-		// },
+		Windows: &windows.Options{
+			WebviewIsTransparent: true,
+		},
 		Bind: []interface{}{
 			app,
 		},

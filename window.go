@@ -23,24 +23,35 @@ type KBDLLHOOKSTRUCT struct {
 }
 
 var (
-	user32          = windows.NewLazyDLL("user32.dll")
-	getWindowText   = user32.NewProc("GetWindowTextW")
-	setWindow       = user32.NewProc("SetForegroundWindow")
-	getWindowRect   = user32.NewProc("GetWindowRect")
-	getAncestor     = user32.NewProc("GetAncestor")
-	setHookEx       = user32.NewProc("SetWindowsHookExW")
-	unhookEx        = user32.NewProc("UnhookWindowsHookEx")
-	getMessage      = user32.NewProc("GetMessageA")
-	callNextHookEx  = user32.NewProc("CallNextHookEx")
-	hookHandle      windows.Handle
-	IsWindowVisible bool = true
+	user32                  = windows.NewLazyDLL("user32.dll")
+	getWindowText           = user32.NewProc("GetWindowTextW")
+	setWindow               = user32.NewProc("SetForegroundWindow")
+	getWindowRect           = user32.NewProc("GetWindowRect")
+	getAncestor             = user32.NewProc("GetAncestor")
+	setHookEx               = user32.NewProc("SetWindowsHookExW")
+	unhookEx                = user32.NewProc("UnhookWindowsHookEx")
+	getMessage              = user32.NewProc("GetMessageA")
+	callNextHookEx          = user32.NewProc("CallNextHookEx")
+	getWindow               = user32.NewProc("FindWindowW")
+	setActiveWindow         = user32.NewProc("SetActiveWindow")
+	procAllowSetForeground  = user32.NewProc("AllowSetForegroundWindow")
+	procKeybdEvent          = user32.NewProc("keybd_event")
+	procGetForegroundWindow = user32.NewProc("GetForegroundWindow")
+	isMinimized             = user32.NewProc("IsIconic")
+	procShowWindow          = user32.NewProc("ShowWindow")
+	hookHandle              windows.Handle
+	IsWindowVisible         bool = true
 )
 
 const (
-	GA_ROOT        = 2
-	WM_KEYDOWN     = 0x0100
-	WM_KEYUP       = 0x0101
-	WH_KEYBOARD_LL = 13
+	GA_ROOT         = 2
+	WM_KEYDOWN      = 0x0100
+	WM_KEYUP        = 0x0101
+	WH_KEYBOARD_LL  = 13
+	ASFW_ANY        = ^uint32(0) // -1
+	VK_MENU         = 0x12       // Alt key
+	KEYEVENTF_KEYUP = 0x0002
+	SW_RESTORE      = 9
 )
 
 func GetOpenWindows() []Window {
@@ -65,11 +76,16 @@ func GetOpenWindows() []Window {
 	if err != nil {
 		fmt.Println("Error:", err)
 	}
-	openWindows = openWindows[1 : len(openWindows)-4]
+	// openWindows = openWindows[1 : len(openWindows)-4]
+	fmt.Println("Open windows: ", openWindows)
 	return openWindows
 }
 
 func SetForegroundWindow(hwnd uintptr) error {
+	ismin, _, _ := isMinimized.Call(hwnd)
+	if ismin != 0 {
+		procShowWindow.Call(hwnd, SW_RESTORE)
+	}
 	ret, _, err := setWindow.Call(hwnd)
 	if ret == 0 {
 		return fmt.Errorf("SetForegroundWindow failed: %v", err)
@@ -77,17 +93,39 @@ func SetForegroundWindow(hwnd uintptr) error {
 	return nil
 }
 func InstallHook(ctx context.Context) {
+
 	var cb = syscall.NewCallback(func(nCode int, wparam uintptr, lparam uintptr) uintptr {
 		if nCode >= 0 && (wparam == WM_KEYDOWN) {
 			kbdStruct := (*KBDLLHOOKSTRUCT)(unsafe.Pointer(lparam))
 			if kbdStruct.VkCode == windows.VK_RSHIFT {
 				if !IsWindowVisible {
-					// runtime.WindowReload(ctx)
-					runtime.Show(ctx)
-					fmt.Println("Root:", root)
-					IsWindowVisible = true
 					runtime.EventsEmit(ctx, "windows:update", GetOpenWindows())
-				} else if IsWindowVisible {
+
+					hwnd, _, _ := getWindow.Call(
+						0,
+						uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr("hop"))),
+					)
+
+					runtime.Show(ctx)
+
+					if hwnd == 0 {
+						hwnd, _, _ = procGetForegroundWindow.Call()
+					}
+
+					procAllowSetForeground.Call(uintptr(ASFW_ANY))
+
+					ret := SetForegroundWindow(hwnd)
+					if ret != nil {
+						procKeybdEvent.Call(uintptr(VK_MENU), 0, 0, 0)
+						SetForegroundWindow(hwnd)
+						procKeybdEvent.Call(uintptr(VK_MENU), 0, KEYEVENTF_KEYUP, 0)
+					}
+
+					setActiveWindow.Call(hwnd)
+
+					IsWindowVisible = true
+					runtime.EventsEmit(ctx, "focus:input")
+				} else {
 					runtime.Hide(ctx)
 					IsWindowVisible = false
 				}
@@ -97,6 +135,7 @@ func InstallHook(ctx context.Context) {
 		ret, _, _ := callNextHookEx.Call(0, uintptr(nCode), wparam, lparam)
 		return ret
 	})
+
 	hook, _, _ := setHookEx.Call(
 		WH_KEYBOARD_LL,
 		cb,
@@ -104,6 +143,7 @@ func InstallHook(ctx context.Context) {
 		0,
 	)
 	hookHandle = windows.Handle(hook)
+
 	var msg struct {
 		hwnd    uintptr
 		message uint32
@@ -112,6 +152,7 @@ func InstallHook(ctx context.Context) {
 		time    uint32
 		pt      struct{ x, y int32 }
 	}
+
 	for {
 		ret, _, _ := getMessage.Call(uintptr(unsafe.Pointer(&msg)), 0, 0, 0)
 		if ret == 0 {

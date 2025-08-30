@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef, useMemo } from "react";
 import "./App.css";
 import { GetWindows, SetFocus } from "../wailsjs/go/main/App";
-import { EventsOn, WindowGetSize, WindowSetSize, WindowShow , Quit} from "../wailsjs/runtime/runtime";
+import { EventsOn, WindowGetSize, WindowSetSize, WindowShow , Quit, WindowSetBackgroundColour, WindowCenter} from "../wailsjs/runtime/runtime";
 
 function App() {
   const [windows, setWindows] = useState([]);
@@ -13,15 +13,42 @@ function App() {
     setAllWindows(result);
     setWindows(result);
     setFilterText(""); // Reset filter when windows update
-    const baseHeight = 10;
-    const itemHeight = 30;
-    const newHeight = baseHeight + itemHeight * result.length;
-    const size = await WindowGetSize();
-    WindowSetSize(size.w, newHeight);
   };
+async function updateWindowSize() {
+    const size = await WindowGetSize();
+
+    // Measure the .list container
+    const listEl = document.querySelector(".list");
+    let listHeight = 0;
+    if (listEl) {
+        listHeight = listEl.scrollHeight;
+    }
+
+    // Add app padding (top + bottom) from CSS (#app { padding: 8px })
+    const appPadding = 16; // 8px top + 8px bottom
+
+    // Minimum height fallback
+    const minHeight = 50;
+
+    const calculatedHeight = Math.max(minHeight, listHeight + appPadding);
+
+    await WindowSetSize(size.w, calculatedHeight);
+}
+
+
+  // Update window size whenever windows change
+  useEffect(() => {
+    if (windows.length > 0) {
+      console.log(`Windows changed: ${windows.length} windows detected`);
+      updateWindowSize(windows);
+    }
+  }, [windows]);
 
   function getWin() {
-    GetWindows().then(updateWindows);
+    GetWindows().then((result) => {
+      updateWindows(result);
+      updateWindowSize(result);
+    });
   }
 
   function generateHints(n) {
@@ -55,18 +82,15 @@ function App() {
   // Update windows when filtered
   useEffect(() => {
     setWindows(filteredWindows);
-    const baseHeight = 10;
-    const itemHeight = 30;
-    const newHeight = baseHeight + itemHeight * filteredWindows.length;
-    WindowGetSize().then(size => {
-      WindowSetSize(size.w, newHeight);
-    });
   }, [filteredWindows]);
 
   useEffect(() => {
     getWin();
     EventsOn("windows:update", (windows) => {
+      console.log(`EventsOn windows:update - ${windows.length} windows`);
       updateWindows(windows);
+      updateWindowSize(windows);
+      WindowSetBackgroundColour(25, 23, 36, 180); // Ensure transparency on update
       WindowShow();
     });
 
@@ -143,12 +167,14 @@ function App() {
       />
       <ul className="list">
         {windows.map((window, index) => (
-          <li
-            key={window.Handle}
-            className="result-item"
-            onClick={() => SetFocus(window.Handle)}
-          >
-            {window.Title + "  " + hints[index]}
+          <li key={window.Handle}>
+            <div
+              className="result-item"
+              onClick={() => SetFocus(window.Handle)}
+            >
+              {window.Title} <span className="split">|</span> <span className="hint">{hints[index].toUpperCase()}</span>
+            </div>
+            {index < windows.length - 1 && <hr className="sep" />}
           </li>
         ))}
       </ul>

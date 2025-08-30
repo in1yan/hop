@@ -1,9 +1,17 @@
 #app {
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: center;
     text-align: center;
+    background: transparent !important;
+    background-color: transparent !important;
+    height: 100vh;
+    padding: 8px;
+    margin: 0;
+    box-sizing: border-box;
+    overflow: hidden;
+    border-radius: 40px;
 }
 
 .result {
@@ -11,12 +19,59 @@
     height: 20px;
     line-height: 20px;
     margin: 1.5rem auto;
+    color: #e0def4; /* Rose Pine text */
 }
 
 .list {
     list-style: none;
     padding: 0;
-    margin: 0 auto;
-    width: 300px;
-    text-align: left;
+    margin: 0;
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+    font-size: small;
+    box-sizing: border-box;
+    /* flex: 1; */
+    overflow: hidden;
+}
+
+.result-item {
+    padding: 6px 12px;
+    margin: 0;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    line-height: 1.4;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+}
+
+.result-item:hover {
+    background-color: rgba(49, 116, 143, 0.536);
+}
+.hint {
+    color: rgba(235, 111, 146, 1); /* Rose Pine foam with transparency */
+    font-size: 1em;
+    font-weight: bolder;
+    margin-left: 4px;
+}
+.split {
+    color: rgba(49, 116, 143, 1); /* Rose Pine foam with transparency */
+    font-size: 1.2em;
+    /* font-weight: bolder; */
+    margin-left: 4px;
+}
+.sep{
+    color: rgba(49, 116, 143, 0.3);
+    font-size: 1px;
+    margin: 2px 0;
+    border: none;
+    border-top: 1px solid rgba(49, 116, 143, 0.3);
+    width: 90%;
+    height: 1px;
 }

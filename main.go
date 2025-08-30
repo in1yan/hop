@@ -28,13 +28,15 @@ func main() {
 		AssetServer: &assetserver.Options{
 			Assets: assets,
 		},
-		BackgroundColour: &options.RGBA{R: 0, G: 0, B: 0, A: 0},
+		BackgroundColour: &options.RGBA{R: 25, G: 23, B: 36, A: 180}, // Rose Pine base with transparency
 		OnStartup: func(ctx context.Context) {
 			app.startup(ctx)
 			go InstallHook(ctx)
 		},
 		Windows: &windows.Options{
 			WebviewIsTransparent: true,
+			WindowIsTranslucent:  true,
+			BackdropType:         windows.Acrylic, // Acrylic for frosty effect
 		},
 		Bind: []interface{}{
 			app,

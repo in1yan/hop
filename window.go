@@ -65,6 +65,7 @@ func GetOpenWindows() []Window {
 	if err != nil {
 		fmt.Println("Error:", err)
 	}
+	openWindows = openWindows[1 : len(openWindows)-4]
 	return openWindows
 }
 
@@ -81,8 +82,11 @@ func InstallHook(ctx context.Context) {
 			kbdStruct := (*KBDLLHOOKSTRUCT)(unsafe.Pointer(lparam))
 			if kbdStruct.VkCode == windows.VK_RSHIFT {
 				if !IsWindowVisible {
+					// runtime.WindowReload(ctx)
 					runtime.Show(ctx)
+					fmt.Println("Root:", root)
 					IsWindowVisible = true
+					runtime.EventsEmit(ctx, "windows:update", GetOpenWindows())
 				} else if IsWindowVisible {
 					runtime.Hide(ctx)
 					IsWindowVisible = false

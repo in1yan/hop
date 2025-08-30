@@ -2,7 +2,8 @@
 
 A fast, lightweight window switcher for Windows that lets you quickly switch between open applications using keyboard shortcuts and visual hints.
 
-![Hop Demo](build/appicon.png)
+<img width="1919" height="1079" alt="image" src="https://github.com/user-attachments/assets/3a3c671f-87a5-41c8-b133-17a9c565db61" />
+
 
 ## Features
 
@@ -126,7 +127,7 @@ Contributions are welcome! Please feel free to submit a Pull Request. For major 
 
 ## Author
 
-Created by **iniyan** (viniyan563@gmail.com)
+Created by **iniyan**
 
 ---
 

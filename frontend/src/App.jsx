@@ -40,14 +40,14 @@ async function updateWindowSize() {
   useEffect(() => {
     if (windows.length > 0) {
       console.log(`Windows changed: ${windows.length} windows detected`);
-      updateWindowSize(windows);
+      updateWindowSize();
     }
   }, [windows]);
 
   function getWin() {
     GetWindows().then((result) => {
       updateWindows(result);
-      updateWindowSize(result);
+      updateWindowSize();
     });
   }
 
@@ -89,7 +89,7 @@ async function updateWindowSize() {
     EventsOn("windows:update", (windows) => {
       console.log(`EventsOn windows:update - ${windows.length} windows`);
       updateWindows(windows);
-      updateWindowSize(windows);
+      updateWindowSize();
       WindowSetBackgroundColour(25, 23, 36, 180); // Ensure transparency on update
       WindowShow();
     });
@@ -131,22 +131,19 @@ async function updateWindowSize() {
     }
   }, [allWindows]);
 
-  // Keep the old keyboard handler for direct key presses (fallback)
+  // Handle escape key to quit application
   useEffect(() => {
     const handler = async (e) => {
       if(e.key === "Escape"){
         Quit();
       }
-      const key = e.key.toUpperCase();
-
-      if (!"HIJKL".includes(key)) return;
     };
 
     document.addEventListener("keydown", handler);
     return () => {
       document.removeEventListener("keydown", handler);
     };
-  }, [allWindows]);
+  }, []);
 
   return (
     <div id="app">

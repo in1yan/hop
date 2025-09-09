@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"sync"
 	"syscall"
 	"unsafe"
 
@@ -40,7 +41,8 @@ var (
 	isMinimized             = user32.NewProc("IsIconic")
 	procShowWindow          = user32.NewProc("ShowWindow")
 	hookHandle              windows.Handle
-	IsWindowVisible         bool = true
+	windowVisibilityMutex   sync.RWMutex
+	isWindowVisible         bool = false
 )
 
 const (
@@ -53,6 +55,19 @@ const (
 	KEYEVENTF_KEYUP = 0x0002
 	SW_RESTORE      = 9
 )
+
+// Thread-safe functions for window visibility state
+func getWindowVisibility() bool {
+	windowVisibilityMutex.RLock()
+	defer windowVisibilityMutex.RUnlock()
+	return isWindowVisible
+}
+
+func setWindowVisibility(visible bool) {
+	windowVisibilityMutex.Lock()
+	defer windowVisibilityMutex.Unlock()
+	isWindowVisible = visible
+}
 
 func GetOpenWindows() []Window {
 	var openWindows []Window
@@ -76,7 +91,6 @@ func GetOpenWindows() []Window {
 	if err != nil {
 		fmt.Println("Error:", err)
 	}
-	// openWindows = openWindows[1 : len(openWindows)-4]
 	fmt.Println("Open windows: ", openWindows)
 	return openWindows
 }
@@ -93,12 +107,11 @@ func SetForegroundWindow(hwnd uintptr) error {
 	return nil
 }
 func InstallHook(ctx context.Context) {
-
 	var cb = syscall.NewCallback(func(nCode int, wparam uintptr, lparam uintptr) uintptr {
 		if nCode >= 0 && (wparam == WM_KEYDOWN) {
 			kbdStruct := (*KBDLLHOOKSTRUCT)(unsafe.Pointer(lparam))
 			if kbdStruct.VkCode == windows.VK_RSHIFT {
-				if !IsWindowVisible {
+				if !getWindowVisibility() {
 					runtime.EventsEmit(ctx, "windows:update", GetOpenWindows())
 
 					hwnd, _, _ := getWindow.Call(
@@ -123,11 +136,11 @@ func InstallHook(ctx context.Context) {
 
 					setActiveWindow.Call(hwnd)
 
-					IsWindowVisible = true
+					setWindowVisibility(true)
 					runtime.EventsEmit(ctx, "focus:input")
 				} else {
 					runtime.Hide(ctx)
-					IsWindowVisible = false
+					setWindowVisibility(false)
 				}
 				fmt.Println("Right Shift Pressed")
 			}
@@ -153,13 +166,25 @@ func InstallHook(ctx context.Context) {
 		pt      struct{ x, y int32 }
 	}
 
+	// Message loop with context cancellation support
 	for {
-		ret, _, _ := getMessage.Call(uintptr(unsafe.Pointer(&msg)), 0, 0, 0)
-		if ret == 0 {
-			break
+		select {
+		case <-ctx.Done():
+			// Context cancelled, cleanup and exit
+			if hookHandle != 0 {
+				unhookEx.Call(uintptr(hookHandle))
+			}
+			return
+		default:
+			ret, _, _ := getMessage.Call(uintptr(unsafe.Pointer(&msg)), 0, 0, 0)
+			if ret == 0 {
+				// WM_QUIT message received
+				break
+			}
 		}
 	}
 
+	// Cleanup hook on exit
 	if hookHandle != 0 {
 		unhookEx.Call(uintptr(hookHandle))
 	}

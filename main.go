@@ -16,8 +16,9 @@ var assets embed.FS
 func main() {
 	// Create an instance of the app structure
 	app := NewApp()
-	// ctx, cancel := context.WithCancel((context.Background()))
-	// defer cancel()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	// Create application with options
 	err := wails.Run(&options.App{
 		Title:       "hop",
@@ -29,9 +30,12 @@ func main() {
 			Assets: assets,
 		},
 		BackgroundColour: &options.RGBA{R: 25, G: 23, B: 36, A: 180}, // Rose Pine base with transparency
-		OnStartup: func(ctx context.Context) {
-			app.startup(ctx)
-			go InstallHook(ctx)
+		OnStartup: func(appCtx context.Context) {
+			app.startup(appCtx)
+			go InstallHook(appCtx)
+		},
+		OnShutdown: func(appCtx context.Context) {
+			cancel() // Signal cleanup
 		},
 		Windows: &windows.Options{
 			WebviewIsTransparent: true,

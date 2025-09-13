@@ -1,3 +1,4 @@
-build
+build/bin
+build/windows
 node_modules
 frontend/dist

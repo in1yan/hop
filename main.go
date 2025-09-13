@@ -24,7 +24,7 @@ func main() {
 		Width:       500,
 		Height:      200,
 		Frameless:   true,
-		StartHidden: true,
+		StartHidden: false,
 		AssetServer: &assetserver.Options{
 			Assets: assets,
 		},
@@ -32,6 +32,7 @@ func main() {
 		OnStartup: func(ctx context.Context) {
 			app.startup(ctx)
 			go InstallHook(ctx)
+			go StartTray(ctx)
 		},
 		Windows: &windows.Options{
 			WebviewIsTransparent: true,

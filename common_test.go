@@ -177,25 +177,54 @@ func TestKBDLLHOOKSTRUCTFields(t *testing.T) {
 
 // TestConstants tests that important constants are defined correctly
 func TestConstants(t *testing.T) {
-	tests := []struct {
-		name     string
-		got      interface{}
-		expected interface{}
-	}{
-		{"GA_ROOT", GA_ROOT, 2},
-		{"WM_KEYDOWN", WM_KEYDOWN, 0x0100},
-		{"WM_KEYUP", WM_KEYUP, 0x0101},
-		{"WH_KEYBOARD_LL", WH_KEYBOARD_LL, 13},
-		{"VK_MENU", VK_MENU, 0x12},
-		{"KEYEVENTF_KEYUP", KEYEVENTF_KEYUP, 0x0002},
-		{"SW_RESTORE", SW_RESTORE, 9},
-	}
+	// Test int constants
+	t.Run("GA_ROOT", func(t *testing.T) {
+		const expected int = 2
+		if GA_ROOT != expected {
+			t.Errorf("GA_ROOT = %d, want %d", GA_ROOT, expected)
+		}
+	})
 	
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if tt.got != tt.expected {
-				t.Errorf("Constant %s = %v, want %v", tt.name, tt.got, tt.expected)
-			}
-		})
-	}
+	t.Run("WH_KEYBOARD_LL", func(t *testing.T) {
+		const expected int = 13
+		if WH_KEYBOARD_LL != expected {
+			t.Errorf("WH_KEYBOARD_LL = %d, want %d", WH_KEYBOARD_LL, expected)
+		}
+	})
+	
+	t.Run("SW_RESTORE", func(t *testing.T) {
+		const expected int = 9
+		if SW_RESTORE != expected {
+			t.Errorf("SW_RESTORE = %d, want %d", SW_RESTORE, expected)
+		}
+	})
+	
+	// Test uint32 constants
+	t.Run("WM_KEYDOWN", func(t *testing.T) {
+		const expected uint32 = 0x0100
+		if WM_KEYDOWN != expected {
+			t.Errorf("WM_KEYDOWN = 0x%x, want 0x%x", WM_KEYDOWN, expected)
+		}
+	})
+	
+	t.Run("WM_KEYUP", func(t *testing.T) {
+		const expected uint32 = 0x0101
+		if WM_KEYUP != expected {
+			t.Errorf("WM_KEYUP = 0x%x, want 0x%x", WM_KEYUP, expected)
+		}
+	})
+	
+	t.Run("VK_MENU", func(t *testing.T) {
+		const expected uint32 = 0x12
+		if VK_MENU != expected {
+			t.Errorf("VK_MENU = 0x%x, want 0x%x", VK_MENU, expected)
+		}
+	})
+	
+	t.Run("KEYEVENTF_KEYUP", func(t *testing.T) {
+		const expected uint32 = 0x0002
+		if KEYEVENTF_KEYUP != expected {
+			t.Errorf("KEYEVENTF_KEYUP = 0x%x, want 0x%x", KEYEVENTF_KEYUP, expected)
+		}
+	})
 }

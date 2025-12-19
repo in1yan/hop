@@ -9,8 +9,9 @@ import (
 
 func TestWindowStruct(t *testing.T) {
 	tests := []struct {
-		name   string
-		window Window
+		name             string
+		window           Window
+		expectZeroHandle bool
 	}{
 		{
 			name: "Basic window",
@@ -18,6 +19,7 @@ func TestWindowStruct(t *testing.T) {
 				Handle: 12345,
 				Title:  "Test Window",
 			},
+			expectZeroHandle: false,
 		},
 		{
 			name: "Window with zero handle",
@@ -25,6 +27,7 @@ func TestWindowStruct(t *testing.T) {
 				Handle: 0,
 				Title:  "Zero Handle Window",
 			},
+			expectZeroHandle: true,
 		},
 		{
 			name: "Window with empty title",
@@ -32,6 +35,7 @@ func TestWindowStruct(t *testing.T) {
 				Handle: 54321,
 				Title:  "",
 			},
+			expectZeroHandle: false,
 		},
 		{
 			name: "Window with long title",
@@ -39,13 +43,17 @@ func TestWindowStruct(t *testing.T) {
 				Handle: 99999,
 				Title:  "This is a very long window title that might be used in real applications",
 			},
+			expectZeroHandle: false,
 		},
 	}
 	
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Test that the struct can be created and accessed
-			if tt.window.Handle == 0 && tt.name != "Window with zero handle" {
+			if tt.expectZeroHandle && tt.window.Handle != 0 {
+				t.Errorf("Expected zero handle, got %d", tt.window.Handle)
+			}
+			if !tt.expectZeroHandle && tt.window.Handle == 0 {
 				t.Errorf("Expected non-zero handle for %s", tt.name)
 			}
 			

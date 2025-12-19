@@ -121,9 +121,31 @@ The application can be configured by editing `wails.json`:
 - 64-bit architecture
 - Minimal RAM and CPU usage
 
+## Testing
+
+The project includes a comprehensive test suite that works across different platforms. For detailed information about running tests, see [TESTING.md](TESTING.md).
+
+```bash
+# Run tests on any platform
+go test -v .
+
+# Run tests with coverage
+go test -v -cover .
+```
+
+The test suite includes:
+- Platform-agnostic unit tests (run on any OS)
+- Windows-specific integration tests (run only on Windows)
+- Stub implementations for non-Windows platforms
+
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
+
+When contributing, please ensure that:
+- Your code includes appropriate tests
+- All existing tests pass
+- You follow the existing code style
 
 ## Author
 

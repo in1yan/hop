@@ -1,13 +1,11 @@
-//go:build windows
-// +build windows
+//go:build !windows
+// +build !windows
 
 package main
 
 import (
 	"context"
 	"fmt"
-
-	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 // App struct
@@ -24,7 +22,6 @@ func NewApp() *App {
 // so we can call the runtime methods
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
-
 }
 
 // Greet returns a greeting for the given name
@@ -33,14 +30,15 @@ func (a *App) Greet(name string) string {
 }
 
 func (a *App) GetWindows() []Window {
-	return GetOpenWindows()
+	// Stub implementation for non-Windows platforms
+	return []Window{}
 }
 
 func (a *App) SetFocus(hwnd uintptr) error {
-	runtime.Hide((a.ctx))
-	return SetForegroundWindow(hwnd)
+	// Stub implementation for non-Windows platforms
+	return nil
 }
 
 func (a *App) FocusHiddenInput() {
-	runtime.EventsEmit(a.ctx, "focus:input")
+	// Stub implementation for non-Windows platforms
 }
